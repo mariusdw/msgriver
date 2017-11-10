@@ -1,0 +1,27 @@
+version: '3'
+services:
+  elastic:
+    build:
+        context: .
+        dockerfile: dockerfile_elastic
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      - discovery.type=single-node
+      - cluster.routing.allocation.disk.threshold_enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    volumes:
+      - esdata1:/usr/share/elasticsearch/data
+  kibana:
+    build: 
+        context: .
+        dockerfile: dockerfile_kibana        
+    ports:
+      - "5601:5601"
+    environment:
+      - "ELASTICSEARCH_URL=http://elastic:9200"
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+volumes:
+  esdata1:
+    driver: local

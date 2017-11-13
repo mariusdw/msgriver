@@ -54,6 +54,10 @@ public class ElasticStore implements DataStore {
                                 new InetSocketTransportAddress(InetAddress.getByName(properties.getProperty(PropertyKeys.ELASTIC_HOST.getKey())),
                                         Integer.parseInt(properties.getProperty(DataStore.PropertyKeys.ELASTIC_PORT.getKey()))));
             } catch (UnknownHostException | PropertiesReader.PropertiesReaderException e) {
+                if (client != null) {
+                    client.close();
+                    client = null;
+                }
                 throw new DataStoreException("Unable to connect to cluster", e);
             }
 
@@ -63,6 +67,10 @@ public class ElasticStore implements DataStore {
 
     @Override
     public ZonedDateTime getMostRecentDocumentTimestamp(String type) throws DataStoreException {
+        if (this.client == null) {
+            init();
+        }
+
         SearchResponse response = this.client.prepareSearch(INDEX).setQuery(
                 QueryBuilders.boolQuery().must(
                         QueryBuilders.termQuery("type", "EMAIL")))
@@ -83,6 +91,10 @@ public class ElasticStore implements DataStore {
 
     @Override
     public void indexMessages(List<Message> messages) throws DataStoreException {
+        if (this.client == null) {
+            init();
+        }
+
         messages.forEach((message) -> {
             try {
                 String json = convertMesssageToJson(message);
